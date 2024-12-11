@@ -64,9 +64,11 @@ class GameState extends ChangeNotifier {
     if (!_soundEnabled) return;
     try {
       await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource('sounds/$soundName.mp3'));
+      final source = AssetSource('sounds/$soundName.mp3');
+      await _audioPlayer.play(source);
     } catch (e) {
-      debugPrint('Error playing sound: $e');
+      print('Sound Error: Failed to play $soundName.mp3 - $e');
+      // You could add additional error handling or fallback logic here
     }
   }
 
