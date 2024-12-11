@@ -109,8 +109,6 @@ class GameScreenContent extends StatelessWidget {
                   ),
                 ],
               ),
-
-              // Rest of the existing code remains the same...
               const SizedBox(height: 32),
 
               // Score Board
@@ -131,26 +129,47 @@ class GameScreenContent extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Game Board
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.cardTheme.color,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: (theme.cardTheme.shape as RoundedRectangleBorder)
-                        .side.color,
+              Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.cardTheme.color,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: (theme.cardTheme.shape as RoundedRectangleBorder)
+                            .side.color,
+                      ),
+                    ),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: 9,
+                      itemBuilder: (context, index) => _buildGameCell(context, index),
+                    ),
                   ),
-                ),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemCount: 9,
-                  itemBuilder: (context, index) => _buildGameCell(context, index),
-                ),
+                  if (gameState.winningLine != null)
+                    TweenAnimationBuilder(
+                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 600),
+                      builder: (context, double progress, _) {
+                        return CustomPaint(
+                          size: Size.infinite,
+                          painter: WinningLinePainter(
+                            winningLine: gameState.winningLine!,
+                            progress: progress,
+                            color: gameState.getCellValue(gameState.winningLine![0]) == 'X'
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.secondary,
+                          ),
+                        );
+                      },
+                    ),
+                ],
               ),
               const SizedBox(height: 32),
 
@@ -167,7 +186,6 @@ class GameScreenContent extends StatelessWidget {
     );
   }
 
-  // Existing helper methods remain the same...
   Widget _buildScoreCard(BuildContext context, String player) {
     final theme = Theme.of(context);
     final gameState = context.watch<GameState>();
@@ -219,5 +237,49 @@ class GameScreenContent extends StatelessWidget {
       textColor: cellValue.isNotEmpty ? playerColor : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
     );
+  }
+}
+
+class WinningLinePainter extends CustomPainter {
+  final List<int> winningLine;
+  final double progress;
+  final Color color;
+
+  WinningLinePainter({
+    required this.winningLine,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+
+    final cellSize = (size.width - 40) / 3;
+    final startCell = winningLine.first;
+    final endCell = winningLine.last;
+
+    final startX = (startCell % 3) * cellSize + cellSize / 2 + 16;
+    final startY = (startCell ~/ 3) * cellSize + cellSize / 2 + 16;
+    final endX = (endCell % 3) * cellSize + cellSize / 2 + 16;
+    final endY = (endCell ~/ 3) * cellSize + cellSize / 2 + 16;
+
+    final start = Offset(startX, startY);
+    final end = Offset(
+      startX + (endX - startX) * progress,
+      startY + (endY - startY) * progress,
+    );
+
+    canvas.drawLine(start, end, paint);
+  }
+
+  @override
+  bool shouldRepaint(WinningLinePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.winningLine != winningLine;
   }
 }

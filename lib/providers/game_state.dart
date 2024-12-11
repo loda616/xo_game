@@ -28,6 +28,10 @@ class GameState extends ChangeNotifier {
   String? _winner;
   String? get winner => _winner;
 
+  // Winning line
+  List<int>? _winningLine;
+  List<int>? get winningLine => _winningLine;
+
   // Initialize SharedPreferences
   Future<void> initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
@@ -43,7 +47,7 @@ class GameState extends ChangeNotifier {
     await _prefs.setInt(_scoreOKey, _scores['O']!);
   }
 
-  // Check for winner (existing code remains the same)
+  // Check for winner with winning line tracking
   void _checkWinner() {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -57,6 +61,7 @@ class GameState extends ChangeNotifier {
           _board[a] == _board[b] &&
           _board[a] == _board[c]) {
         _winner = _board[a];
+        _winningLine = line;  // Store winning line
         _gameOver = true;
         _scores[_winner!] = _scores[_winner!]! + 1;
         _saveScores(); // Save scores when they change
@@ -65,20 +70,27 @@ class GameState extends ChangeNotifier {
       }
     }
 
+    // Check for draw
     if (!_board.contains('')) {
       _gameOver = true;
       _winner = null;
+      _winningLine = null;
       notifyListeners();
     }
   }
 
-  // Handle move (existing code remains the same)
+  // Handle move
   void makeMove(int index) {
+    // Prevent moves if cell is occupied or game is over
     if (_board[index].isNotEmpty || _gameOver) return;
 
+    // Make the move
     _board[index] = _currentPlayer;
+
+    // Check for win or draw
     _checkWinner();
 
+    // Switch player if game isn't over
     if (!_gameOver) {
       _currentPlayer = _currentPlayer == 'X' ? 'O' : 'X';
     }
@@ -92,6 +104,7 @@ class GameState extends ChangeNotifier {
     _currentPlayer = 'X';
     _gameOver = false;
     _winner = null;
+    _winningLine = null;  // Clear winning line
     notifyListeners();
   }
 
@@ -103,7 +116,7 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get game status message
+  // Get current game status message
   String getGameStatus() {
     if (_gameOver) {
       if (_winner != null) {
@@ -114,12 +127,22 @@ class GameState extends ChangeNotifier {
     return 'Current Turn: Player $_currentPlayer';
   }
 
-  // Check if a cell is empty
+  // Helper methods for cell management
   bool isCellEmpty(int index) => _board[index].isEmpty;
-
-  // Get cell value
   String getCellValue(int index) => _board[index];
-
-  // Get player score
   int getPlayerScore(String player) => _scores[player] ?? 0;
+
+  // Get winning combination type
+  String? getWinType() {
+    if (_winningLine == null) return null;
+
+    final [a, b, c] = _winningLine!;
+
+    // Check row win
+    if ((c - a) == 2) return 'row';
+    // Check column win
+    if ((c - a) == 6) return 'column';
+    // Check diagonal win
+    return 'diagonal';
+  }
 }
