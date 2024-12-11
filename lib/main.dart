@@ -8,12 +8,14 @@ import 'package:xo_game/screens/game_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  final gameState = GameState();
+  await gameState.initPrefs();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(prefs)),
-        ChangeNotifierProvider(create: (_) => GameState()),
+        ChangeNotifierProvider.value(value: gameState),
       ],
       child: const MyApp(),
     ),

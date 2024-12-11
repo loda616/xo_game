@@ -15,6 +15,22 @@ class GameScreen extends StatelessWidget {
 class GameScreenContent extends StatelessWidget {
   const GameScreenContent({super.key});
 
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Settings'),
+        content: const Text('Settings options will be added here.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -38,6 +54,37 @@ class GameScreenContent extends StatelessWidget {
                   ),
                   Row(
                     children: [
+                      // Reset Scores Button
+                      IconButton(
+                        icon: Icon(
+                          Icons.restart_alt,
+                          color: theme.colorScheme.onBackground,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Reset Scores'),
+                              content: const Text('Are you sure you want to reset all scores?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    gameState.resetScores();
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Reset'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        tooltip: 'Reset Scores',
+                      ),
+                      // Theme Toggle Button
                       IconButton(
                         icon: Icon(
                           themeProvider.isDarkMode
@@ -46,11 +93,23 @@ class GameScreenContent extends StatelessWidget {
                           color: theme.colorScheme.onBackground,
                         ),
                         onPressed: () => themeProvider.toggleTheme(),
+                        tooltip: 'Toggle Theme',
+                      ),
+                      // Settings Button
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings,
+                          color: theme.colorScheme.onBackground,
+                        ),
+                        onPressed: () => _showSettingsDialog(context),
+                        tooltip: 'Settings',
                       ),
                     ],
                   ),
                 ],
               ),
+
+              // Rest of the existing code remains the same...
               const SizedBox(height: 32),
 
               // Score Board
@@ -107,6 +166,7 @@ class GameScreenContent extends StatelessWidget {
     );
   }
 
+  // Existing helper methods remain the same...
   Widget _buildScoreCard(BuildContext context, String player) {
     final theme = Theme.of(context);
     final gameState = context.watch<GameState>();
