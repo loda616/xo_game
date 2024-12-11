@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_state.dart';
+import '../widgets/animated_game_cell.dart';
 
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
@@ -210,28 +211,13 @@ class GameScreenContent extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.secondary;
 
-    return Material(
-      color: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({}),
+    return AnimatedGameCell(
+      value: cellValue,
+      onTap: () => gameState.makeMove(index),
+      backgroundColor: theme.elevatedButtonTheme.style?.backgroundColor?.resolve({})
+          ?? theme.cardColor,
+      textColor: cellValue.isNotEmpty ? playerColor : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () => gameState.makeMove(index),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              cellValue,
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: cellValue.isNotEmpty ? playerColor : Colors.transparent,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
