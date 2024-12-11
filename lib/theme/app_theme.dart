@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static final ThemeData darkTheme = ThemeData(
+    // Dark theme remains the same
     brightness: Brightness.dark,
     scaffoldBackgroundColor: Colors.black,
     colorScheme: const ColorScheme.dark(
@@ -51,35 +52,31 @@ class AppTheme {
 
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    scaffoldBackgroundColor: const Color(0xFFF3F4F6), // gray-100
+    scaffoldBackgroundColor: Colors.white,  // Changed to white
     colorScheme: const ColorScheme.light(
       primary: Color(0xFF2563EB),    // Player X color (blue-600)
-      secondary: Color(0xFFDC2626),   // Player O color (red-600)
-      surface: Colors.white,
-      background: Color(0xFFF3F4F6),  // gray-100
+      secondary: Color(0xFFDC2626),
       onBackground: Color(0xFF1F2937), // gray-800
       onSurface: Color(0xFF1F2937),   // gray-800
     ),
     cardTheme: CardTheme(
-      color: Colors.white,
+      color:  Colors.black26,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: const BorderSide(color: Color(0xFFE5E7EB)), // gray-200
       ),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+      elevation: 0,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF3F4F6), // Changed to gray-100
         foregroundColor: const Color(0xFF1F2937), // gray-800
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: Color(0xFFE5E7EB)), // gray-200
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        elevation: 0, // Removed elevation for flat appearance
       ),
     ),
     textTheme: const TextTheme(
