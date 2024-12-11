@@ -1,11 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 
 class GameState extends ChangeNotifier {
+  // Audio player setup
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _soundEnabled = true;
+
   // Keys for SharedPreferences
   static const String _scoreXKey = 'score_x';
   static const String _scoreOKey = 'score_o';
+  static const String _soundEnabledKey = 'sound_enabled';
 
   late SharedPreferences _prefs;
 
@@ -33,16 +39,44 @@ class GameState extends ChangeNotifier {
   List<int>? _winningLine;
   List<int>? get winningLine => _winningLine;
 
-  // Initialize SharedPreferences
+  // Sound state
+  bool get soundEnabled => _soundEnabled;
+
+  // Initialize preferences and audio
   Future<void> initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
-    // Load saved scores
+    // Load saved scores and settings
     _scores['X'] = _prefs.getInt(_scoreXKey) ?? 0;
     _scores['O'] = _prefs.getInt(_scoreOKey) ?? 0;
+    _soundEnabled = _prefs.getBool(_soundEnabledKey) ?? true;
+    await _audioPlayer.setVolume(1.0);
     notifyListeners();
   }
 
-  // Haptic feedback methods
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  // Sound effect methods
+  Future<void> _playSound(String soundName) async {
+    if (!_soundEnabled) return;
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource('sounds/$soundName.mp3'));
+    } catch (e) {
+      debugPrint('Error playing sound: $e');
+    }
+  }
+
+  Future<void> toggleSound() async {
+    _soundEnabled = !_soundEnabled;
+    await _prefs.setBool(_soundEnabledKey, _soundEnabled);
+    notifyListeners();
+  }
+
+  // Haptic feedback methods (existing code)
   void _moveHaptic() async {
     if (await Vibration.hasVibrator() ?? false) {
       Vibration.vibrate(duration: 40);
@@ -87,7 +121,8 @@ class GameState extends ChangeNotifier {
         _gameOver = true;
         _scores[_winner!] = _scores[_winner!]! + 1;
         _saveScores();
-        _winHaptic(); // Add win haptic
+        _winHaptic();
+        _playSound('win');  // Play win sound
         notifyListeners();
         return;
       }
@@ -97,7 +132,8 @@ class GameState extends ChangeNotifier {
       _gameOver = true;
       _winner = null;
       _winningLine = null;
-      _drawHaptic(); // Add draw haptic
+      _drawHaptic();
+      _playSound('draw');  // Play draw sound
       notifyListeners();
     }
   }
@@ -106,7 +142,9 @@ class GameState extends ChangeNotifier {
     if (_board[index].isNotEmpty || _gameOver) return;
 
     _board[index] = _currentPlayer;
-    _moveHaptic(); // Add move haptic
+    _moveHaptic();
+    _playSound('click');  // Play move sound
+
     _checkWinner();
 
     if (!_gameOver) {
@@ -122,7 +160,8 @@ class GameState extends ChangeNotifier {
     _gameOver = false;
     _winner = null;
     _winningLine = null;
-    _moveHaptic(); // Add reset haptic
+    _moveHaptic();
+    _playSound('reset');  // Play reset sound
     notifyListeners();
   }
 
@@ -130,10 +169,12 @@ class GameState extends ChangeNotifier {
     _scores['X'] = 0;
     _scores['O'] = 0;
     await _saveScores();
-    _moveHaptic(); // Add reset scores haptic
+    _moveHaptic();
+    _playSound('reset');  // Play reset sound
     notifyListeners();
   }
 
+  // Existing helper methods remain the same
   String getGameStatus() {
     if (_gameOver) {
       if (_winner != null) {

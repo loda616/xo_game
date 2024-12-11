@@ -21,7 +21,22 @@ class GameScreenContent extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Settings'),
-        content: const Text('Settings options will be added here.'),
+        content: Consumer<GameState>(
+          builder: (context, gameState, child) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Sound Effects'),
+                trailing: Switch(
+                  value: gameState.soundEnabled,
+                  onChanged: (value) {
+                    gameState.toggleSound();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
