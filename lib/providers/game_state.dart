@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 class GameState extends ChangeNotifier {
   // Keys for SharedPreferences
@@ -41,13 +42,34 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Haptic feedback methods
+  void _moveHaptic() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 40);
+    }
+  }
+
+  void _winHaptic() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(
+        pattern: [0, 100, 100, 100],
+        intensities: [0, 128, 0, 255],
+      );
+    }
+  }
+
+  void _drawHaptic() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 150);
+    }
+  }
+
   // Save scores to persistent storage
   Future<void> _saveScores() async {
     await _prefs.setInt(_scoreXKey, _scores['X']!);
     await _prefs.setInt(_scoreOKey, _scores['O']!);
   }
 
-  // Check for winner with winning line tracking
   void _checkWinner() {
     const lines = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -61,36 +83,32 @@ class GameState extends ChangeNotifier {
           _board[a] == _board[b] &&
           _board[a] == _board[c]) {
         _winner = _board[a];
-        _winningLine = line;  // Store winning line
+        _winningLine = line;
         _gameOver = true;
         _scores[_winner!] = _scores[_winner!]! + 1;
-        _saveScores(); // Save scores when they change
+        _saveScores();
+        _winHaptic(); // Add win haptic
         notifyListeners();
         return;
       }
     }
 
-    // Check for draw
     if (!_board.contains('')) {
       _gameOver = true;
       _winner = null;
       _winningLine = null;
+      _drawHaptic(); // Add draw haptic
       notifyListeners();
     }
   }
 
-  // Handle move
   void makeMove(int index) {
-    // Prevent moves if cell is occupied or game is over
     if (_board[index].isNotEmpty || _gameOver) return;
 
-    // Make the move
     _board[index] = _currentPlayer;
-
-    // Check for win or draw
+    _moveHaptic(); // Add move haptic
     _checkWinner();
 
-    // Switch player if game isn't over
     if (!_gameOver) {
       _currentPlayer = _currentPlayer == 'X' ? 'O' : 'X';
     }
@@ -98,25 +116,24 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Reset game (board only, keeps scores)
   void resetGame() {
     _board.fillRange(0, 9, '');
     _currentPlayer = 'X';
     _gameOver = false;
     _winner = null;
-    _winningLine = null;  // Clear winning line
+    _winningLine = null;
+    _moveHaptic(); // Add reset haptic
     notifyListeners();
   }
 
-  // Reset scores with persistence
   Future<void> resetScores() async {
     _scores['X'] = 0;
     _scores['O'] = 0;
     await _saveScores();
+    _moveHaptic(); // Add reset scores haptic
     notifyListeners();
   }
 
-  // Get current game status message
   String getGameStatus() {
     if (_gameOver) {
       if (_winner != null) {
@@ -127,22 +144,7 @@ class GameState extends ChangeNotifier {
     return 'Current Turn: Player $_currentPlayer';
   }
 
-  // Helper methods for cell management
   bool isCellEmpty(int index) => _board[index].isEmpty;
   String getCellValue(int index) => _board[index];
   int getPlayerScore(String player) => _scores[player] ?? 0;
-
-  // Get winning combination type
-  String? getWinType() {
-    if (_winningLine == null) return null;
-
-    final [a, b, c] = _winningLine!;
-
-    // Check row win
-    if ((c - a) == 2) return 'row';
-    // Check column win
-    if ((c - a) == 6) return 'column';
-    // Check diagonal win
-    return 'diagonal';
-  }
 }
