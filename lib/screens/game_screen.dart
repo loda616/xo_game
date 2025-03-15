@@ -212,7 +212,6 @@ class GameScreenContent extends StatelessWidget {
     );
   }
 
-  // Helper methods remain the same...
   Widget _buildScoreCard(BuildContext context, String player) {
     final theme = Theme.of(context);
     final gameState = context.watch<GameState>();

@@ -4,45 +4,35 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 
 class GameState extends ChangeNotifier {
-  // Audio player setup
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _soundEnabled = true;
 
-  // Keys for SharedPreferences
   static const String _scoreXKey = 'score_x';
   static const String _scoreOKey = 'score_o';
   static const String _soundEnabledKey = 'sound_enabled';
 
   late SharedPreferences _prefs;
 
-  // Game board state
   final List<String> _board = List.filled(9, '');
   List<String> get board => _board;
 
-  // Current player
   String _currentPlayer = 'X';
   String get currentPlayer => _currentPlayer;
 
-  // Game status
   bool _gameOver = false;
   bool get gameOver => _gameOver;
 
-  // Player scores with persistence
   final Map<String, int> _scores = {'X': 0, 'O': 0};
   Map<String, int> get scores => _scores;
 
-  // Winner
   String? _winner;
   String? get winner => _winner;
 
-  // Winning line
   List<int>? _winningLine;
   List<int>? get winningLine => _winningLine;
 
-  // Sound state
   bool get soundEnabled => _soundEnabled;
 
-  // Initialize preferences and audio
   Future<void> initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
     // Load saved scores and settings
@@ -59,7 +49,6 @@ class GameState extends ChangeNotifier {
     super.dispose();
   }
 
-  // Sound effect methods
   Future<void> _playSound(String soundName) async {
     if (!_soundEnabled) return;
     try {
@@ -67,7 +56,9 @@ class GameState extends ChangeNotifier {
       final source = AssetSource('sounds/$soundName.mp3');
       await _audioPlayer.play(source);
     } catch (e) {
-      print('Sound Error: Failed to play $soundName.mp3 - $e');
+      if (kDebugMode) {
+        print('Sound Error: Failed to play $soundName.mp3 - $e');
+      }
       // You could add additional error handling or fallback logic here
     }
   }
@@ -78,7 +69,6 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Haptic feedback methods (existing code)
   void _moveHaptic() async {
     if (await Vibration.hasVibrator() ?? false) {
       Vibration.vibrate(duration: 40);
@@ -100,7 +90,6 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  // Save scores to persistent storage
   Future<void> _saveScores() async {
     await _prefs.setInt(_scoreXKey, _scores['X']!);
     await _prefs.setInt(_scoreOKey, _scores['O']!);
@@ -135,7 +124,7 @@ class GameState extends ChangeNotifier {
       _winner = null;
       _winningLine = null;
       _drawHaptic();
-      _playSound('draw');  // Play draw sound
+      _playSound('draw');
       notifyListeners();
     }
   }
@@ -163,7 +152,7 @@ class GameState extends ChangeNotifier {
     _winner = null;
     _winningLine = null;
     _moveHaptic();
-    _playSound('reset');  // Play reset sound
+    _playSound('reset');
     notifyListeners();
   }
 
@@ -172,11 +161,10 @@ class GameState extends ChangeNotifier {
     _scores['O'] = 0;
     await _saveScores();
     _moveHaptic();
-    _playSound('reset');  // Play reset sound
+    _playSound('reset');
     notifyListeners();
   }
 
-  // Existing helper methods remain the same
   String getGameStatus() {
     if (_gameOver) {
       if (_winner != null) {

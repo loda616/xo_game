@@ -21,7 +21,6 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Helper methods to get current theme's colors
   Color get playerXColor => _isDarkMode
       ? AppTheme.darkTheme.colorScheme.primary
       : AppTheme.lightTheme.colorScheme.primary;
