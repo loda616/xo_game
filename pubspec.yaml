@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+
   flutter:
     sdk: flutter
 
@@ -37,8 +38,12 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.3
   flutter_animate: ^4.5.2
-  flutter_haptic: ^0.0.3
   just_audio: ^0.9.42
+  vibration: ^1.8.1
+  audioplayers: ^5.2.1
+  window_manager: ^0.4.3
+  window_size: ^0.1.0
+
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +55,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -63,7 +69,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+    - assets/sounds/
+    - assets/icon/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -92,3 +100,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/android/play_store_512.png"
+  adaptive_icon_background: "#1E1E1E"
+  adaptive_icon_foreground: "assets/icon/android/play_store_512.png"
