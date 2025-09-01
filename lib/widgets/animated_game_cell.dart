@@ -6,6 +6,8 @@ class AnimatedGameCell extends StatefulWidget {
   final Color backgroundColor;
   final Color textColor;
   final BorderRadius borderRadius;
+  final Duration animationDuration;
+  final Curve animationCurve;
 
   const AnimatedGameCell({
     super.key,
@@ -14,6 +16,8 @@ class AnimatedGameCell extends StatefulWidget {
     required this.backgroundColor,
     required this.textColor,
     required this.borderRadius,
+    this.animationDuration = const Duration(milliseconds: 300),
+    this.animationCurve = Curves.elasticOut,
   });
 
   @override
@@ -30,14 +34,14 @@ class _AnimatedGameCellState extends State<AnimatedGameCell>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: widget.animationDuration,
       vsync: this,
     );
 
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Curves.elasticOut,
+        curve: widget.animationCurve,
       ),
     );
 

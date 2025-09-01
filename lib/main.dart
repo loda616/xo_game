@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'theme/app_theme.dart';
 import 'utils/platform_utils.dart';
 import 'utils/window_manager.dart';
 import 'providers/theme_provider.dart';
@@ -40,7 +41,9 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'XO Game',
-          theme: themeProvider.theme,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
           home: const GameScreen(),
           builder: (context, child) {
             return MediaQuery(

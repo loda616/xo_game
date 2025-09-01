@@ -6,32 +6,55 @@ class ThemeProvider extends ChangeNotifier {
   static const String _themePreferenceKey = 'theme_preference';
   final SharedPreferences _prefs;
 
+  late ThemeMode _themeMode;
+
   ThemeProvider(this._prefs) {
-    _isDarkMode = _prefs.getBool(_themePreferenceKey) ?? true;
+    final themeIndex = _prefs.getInt(_themePreferenceKey);
+    if (themeIndex == null) {
+      _themeMode = ThemeMode.system;
+    } else {
+      _themeMode = ThemeMode.values[themeIndex];
+    }
   }
 
-  bool _isDarkMode = true;
-  bool get isDarkMode => _isDarkMode;
+  ThemeMode get themeMode => _themeMode;
 
-  ThemeData get theme => _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
+  bool isDarkMode(BuildContext context) {
+    if (_themeMode == ThemeMode.system) {
+      return MediaQuery.of(context).platformBrightness == Brightness.dark;
+    }
+    return _themeMode == ThemeMode.dark;
+  }
 
   Future<void> toggleTheme() async {
-    _isDarkMode = !_isDarkMode;
-    await _prefs.setBool(_themePreferenceKey, _isDarkMode);
+    if (_themeMode == ThemeMode.light) {
+      _themeMode = ThemeMode.dark;
+    } else if (_themeMode == ThemeMode.dark) {
+      _themeMode = ThemeMode.system;
+    } else {
+      _themeMode = ThemeMode.light;
+    }
+    await _prefs.setInt(_themePreferenceKey, _themeMode.index);
     notifyListeners();
   }
 
-  Color get playerXColor => _isDarkMode
+  Color playerXColor(BuildContext context) => isDarkMode(context)
       ? AppTheme.darkTheme.colorScheme.primary
       : AppTheme.lightTheme.colorScheme.primary;
 
-  Color get playerOColor => _isDarkMode
+  Color playerOColor(BuildContext context) => isDarkMode(context)
       ? AppTheme.darkTheme.colorScheme.secondary
       : AppTheme.lightTheme.colorScheme.secondary;
 
-  Color get backgroundColor => theme.scaffoldBackgroundColor;
-  Color get cardColor => theme.cardTheme.color!;
-  Color get textColor => _isDarkMode
+  Color backgroundColor(BuildContext context) => isDarkMode(context)
+      ? AppTheme.darkTheme.scaffoldBackgroundColor
+      : AppTheme.lightTheme.scaffoldBackgroundColor;
+
+  Color cardColor(BuildContext context) => isDarkMode(context)
+      ? AppTheme.darkTheme.cardTheme.color!
+      : AppTheme.lightTheme.cardTheme.color!;
+
+  Color textColor(BuildContext context) => isDarkMode(context)
       ? AppTheme.darkTheme.colorScheme.onBackground
       : AppTheme.lightTheme.colorScheme.onBackground;
 }

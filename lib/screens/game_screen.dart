@@ -34,6 +34,17 @@ class GameScreenContent extends StatelessWidget {
     );
   }
 
+  IconData _getThemeIcon(ThemeMode themeMode) {
+    switch (themeMode) {
+      case ThemeMode.light:
+        return Icons.dark_mode;
+      case ThemeMode.dark:
+        return Icons.light_mode;
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -99,9 +110,7 @@ class GameScreenContent extends StatelessWidget {
                             // Theme Toggle Button
                             IconButton(
                               icon: Icon(
-                                themeProvider.isDarkMode
-                                    ? Icons.light_mode
-                                    : Icons.dark_mode,
+                                _getThemeIcon(themeProvider.themeMode),
                                 color: theme.colorScheme.onBackground,
                               ),
                               onPressed: () => themeProvider.toggleTheme(),
@@ -140,60 +149,54 @@ class GameScreenContent extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     // Game Board
-                    Flexible(
+                    Expanded(
                       child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: screenSize.width > 600 ? 500 : screenSize.width - 32,
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: theme.cardTheme.color,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: (theme.cardTheme.shape as RoundedRectangleBorder)
-                                          .side.color,
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final boardSize = constraints.biggest.width;
+                              return Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: theme.cardTheme.color,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: (theme.cardTheme.shape as RoundedRectangleBorder).side.color,
+                                      ),
+                                    ),
+                                    child: GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 3,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 8,
+                                      ),
+                                      itemCount: 9,
+                                      itemBuilder: (context, index) => _buildGameCell(context, index),
                                     ),
                                   ),
-                                  child: GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 3,
-                                      crossAxisSpacing: 8,
-                                      mainAxisSpacing: 8,
+                                  if (gameState.winningLine != null)
+                                    TweenAnimationBuilder(
+                                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                                      duration: const Duration(milliseconds: 600),
+                                      builder: (context, double progress, _) {
+                                        return CustomPaint(
+                                          size: Size.square(boardSize),
+                                          painter: WinningLinePainter(
+                                            winningLine: gameState.winningLine!,
+                                            progress: progress,
+                                            color: gameColors.winningLineColor(gameState.winner),
+                                            size: Size.square(boardSize),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                    itemCount: 9,
-                                    itemBuilder: (context, index) => _buildGameCell(context, index),
-                                  ),
-                                ),
-                                if (gameState.winningLine != null)
-                                  LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      return TweenAnimationBuilder(
-                                        tween: Tween<double>(begin: 0.0, end: 1.0),
-                                        duration: const Duration(milliseconds: 600),
-                                        builder: (context, double progress, _) {
-                                          return CustomPaint(
-                                            size: constraints.biggest,
-                                            painter: WinningLinePainter(
-                                              winningLine: gameState.winningLine!,
-                                              progress: progress,
-                                              color: gameColors.winningLineColor(gameState.winner),
-                                              size: constraints.biggest,
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                              ],
-                            ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -222,9 +225,10 @@ class GameScreenContent extends StatelessWidget {
     final gameState = context.watch<GameState>();
     final gameColors = GameColors(context);
     final playerColor = gameColors.playerColor(player);
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
-      width: 120,
+      width: screenWidth > 600 ? 150 : 120,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
@@ -235,16 +239,22 @@ class GameScreenContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            'Player $player',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: playerColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Player $player',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: playerColor,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            '${gameState.getPlayerScore(player)}',
-            style: theme.textTheme.headlineMedium,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '${gameState.getPlayerScore(player)}',
+              style: theme.textTheme.headlineMedium,
+            ),
           ),
         ],
       ),
