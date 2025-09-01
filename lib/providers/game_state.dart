@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:vibration/vibration.dart';
+import 'package:tic_tac_toe/utils/haptic_feedback_manager.dart';
 
 class GameState extends ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final HapticFeedbackManager _hapticFeedbackManager = HapticFeedbackManager();
   bool _soundEnabled = true;
 
   static const String _scoreXKey = 'score_x';
@@ -69,27 +70,6 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _moveHaptic() async {
-    if (await Vibration.hasVibrator() ?? false) {
-      Vibration.vibrate(duration: 40);
-    }
-  }
-
-  void _winHaptic() async {
-    if (await Vibration.hasVibrator() ?? false) {
-      Vibration.vibrate(
-        pattern: [0, 100, 100, 100],
-        intensities: [0, 128, 0, 255],
-      );
-    }
-  }
-
-  void _drawHaptic() async {
-    if (await Vibration.hasVibrator() ?? false) {
-      Vibration.vibrate(duration: 150);
-    }
-  }
-
   Future<void> _saveScores() async {
     await _prefs.setInt(_scoreXKey, _scores['X']!);
     await _prefs.setInt(_scoreOKey, _scores['O']!);
@@ -112,7 +92,7 @@ class GameState extends ChangeNotifier {
         _gameOver = true;
         _scores[_winner!] = _scores[_winner!]! + 1;
         _saveScores();
-        _winHaptic();
+        _hapticFeedbackManager.vibrate(HapticPattern.win);
         _playSound('win');  // Play win sound
         notifyListeners();
         return;
@@ -123,7 +103,7 @@ class GameState extends ChangeNotifier {
       _gameOver = true;
       _winner = null;
       _winningLine = null;
-      _drawHaptic();
+      _hapticFeedbackManager.vibrate(HapticPattern.draw);
       _playSound('draw');
       notifyListeners();
     }
@@ -133,7 +113,7 @@ class GameState extends ChangeNotifier {
     if (_board[index].isNotEmpty || _gameOver) return;
 
     _board[index] = _currentPlayer;
-    _moveHaptic();
+    _hapticFeedbackManager.vibrate(HapticPattern.move);
     _playSound('click');  // Play move sound
 
     _checkWinner();
@@ -151,7 +131,7 @@ class GameState extends ChangeNotifier {
     _gameOver = false;
     _winner = null;
     _winningLine = null;
-    _moveHaptic();
+    _hapticFeedbackManager.vibrate(HapticPattern.move);
     _playSound('reset');
     notifyListeners();
   }
@@ -160,7 +140,7 @@ class GameState extends ChangeNotifier {
     _scores['X'] = 0;
     _scores['O'] = 0;
     await _saveScores();
-    _moveHaptic();
+    _hapticFeedbackManager.vibrate(HapticPattern.move);
     _playSound('reset');
     notifyListeners();
   }

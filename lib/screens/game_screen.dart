@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tic_tac_toe/theme/game_colors.dart';
 import '../providers/theme_provider.dart';
 import '../providers/game_state.dart';
 import '../widgets/animated_game_cell.dart';
@@ -38,6 +39,7 @@ class GameScreenContent extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final gameState = context.watch<GameState>();
     final theme = Theme.of(context);
+    final gameColors = GameColors(context);
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -171,19 +173,22 @@ class GameScreenContent extends StatelessWidget {
                                   ),
                                 ),
                                 if (gameState.winningLine != null)
-                                  TweenAnimationBuilder(
-                                    tween: Tween<double>(begin: 0.0, end: 1.0),
-                                    duration: const Duration(milliseconds: 600),
-                                    builder: (context, double progress, _) {
-                                      return CustomPaint(
-                                        size: Size.infinite,
-                                        painter: WinningLinePainter(
-                                          winningLine: gameState.winningLine!,
-                                          progress: progress,
-                                          color: gameState.getCellValue(gameState.winningLine![0]) == 'X'
-                                              ? theme.colorScheme.primary
-                                              : theme.colorScheme.secondary,
-                                        ),
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return TweenAnimationBuilder(
+                                        tween: Tween<double>(begin: 0.0, end: 1.0),
+                                        duration: const Duration(milliseconds: 600),
+                                        builder: (context, double progress, _) {
+                                          return CustomPaint(
+                                            size: constraints.biggest,
+                                            painter: WinningLinePainter(
+                                              winningLine: gameState.winningLine!,
+                                              progress: progress,
+                                              color: gameColors.winningLineColor(gameState.winner),
+                                              size: constraints.biggest,
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -215,9 +220,8 @@ class GameScreenContent extends StatelessWidget {
   Widget _buildScoreCard(BuildContext context, String player) {
     final theme = Theme.of(context);
     final gameState = context.watch<GameState>();
-    final playerColor = player == 'X'
-        ? theme.colorScheme.primary
-        : theme.colorScheme.secondary;
+    final gameColors = GameColors(context);
+    final playerColor = gameColors.playerColor(player);
 
     return Container(
       width: 120,
@@ -250,10 +254,9 @@ class GameScreenContent extends StatelessWidget {
   Widget _buildGameCell(BuildContext context, int index) {
     final theme = Theme.of(context);
     final gameState = context.watch<GameState>();
+    final gameColors = GameColors(context);
     final cellValue = gameState.getCellValue(index);
-    final playerColor = cellValue == 'X'
-        ? theme.colorScheme.primary
-        : theme.colorScheme.secondary;
+    final playerColor = gameColors.playerColor(cellValue);
 
     return AnimatedGameCell(
       value: cellValue,
